@@ -26,12 +26,14 @@ func TestConnectDB(t *testing.T) {
 	db := storage.ConnectDB()
 	// Simple CRUD Test
 	rows := storage.Query(db, "INSERT INTO users (name, login_id) VALUES(?,?)", "관리자", "gslee")
+	// 적용된 rows 개수를 가져와서 0건이면 에러
 	// 	t.Error("Wrong result")
 
 	var id int
 	var name, login_id string
 	var users []model.Users
 	rows = storage.Query(db, "SELECT id, name, login_id FROM users WHERE login_id = ?", "gslee")
+	// 조회결과가 0건이면 에러
 	for rows.Next() {
 		err := rows.Scan(&id, &name, &login_id)
 		if err != nil {
@@ -46,9 +48,11 @@ func TestConnectDB(t *testing.T) {
 		if i == 0 {
 			// 첫번째 row는 name값을 변경
 			storage.Query(db, "UPDATE users SET Name = ? WHERE id = ?", "test", v.ID)
+			// Update 결과가 0건이면 에러
 		} else {
 			// 나머지 row는 제거
 			storage.Query(db, "DELETE FROM users WHERE id = ?", v.ID)
+			// Delete 수행 했는데 결과가 0건이면 에러 - delete 할 내용이 없는 경우 에러로 체크 될 일 없음
 		}
 	}
 
