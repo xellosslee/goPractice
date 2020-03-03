@@ -9,14 +9,24 @@ import (
 	"cndf.order.was/storage"
 )
 
+/* 테스트에 사용된 테이블
+DROP TABLE users;
+CREATE TABLE `users` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `login_id` varchar(100) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `create_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `modify_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='유저정보 테이블';
+*/
+
 func TestConnectDB(t *testing.T) {
 
 	db := storage.ConnectDB()
 	// Simple CRUD Test
 	rows := storage.Query(db, "INSERT INTO users (name, login_id) VALUES(?,?)", "관리자", "gslee")
-	for rows.Next() {
-		fmt.Println(rows.Scan())
-	}
+	// 	t.Error("Wrong result")
 
 	var id int
 	var name, login_id string
