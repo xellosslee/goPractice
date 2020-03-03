@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"cndf.order/structs"
+	"cndf.order.was/structs"
 )
 
 var store structs.MessageList

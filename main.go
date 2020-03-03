@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"cndf.order/httpHandlers"
-	"cndf.order/storage"
-	"cndf.order/structs"
+	"cndf.order.was/httpHandlers"
+	"cndf.order.was/storage"
+	"cndf.order.was/structs"
 )
 
 const PORT = 8080

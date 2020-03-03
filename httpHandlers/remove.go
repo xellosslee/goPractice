@@ -6,9 +6,9 @@ import (
 
 	"encoding/json"
 
-	"cndf.order/httpHandlers/httpUtils"
-	"cndf.order/storage"
-	"cndf.order/structs"
+	"cndf.order.was/httpHandlers/httpUtils"
+	"cndf.order.was/storage"
+	"cndf.order.was/structs"
 )
 
 func Remove(w http.ResponseWriter, r *http.Request) {

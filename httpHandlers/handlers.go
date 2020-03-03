@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"cndf.order/httpHandlers/httpUtils"
+	"cndf.order.was/httpHandlers/httpUtils"
 )
 
 func HandleRequest(w http.ResponseWriter, r *http.Request) {
