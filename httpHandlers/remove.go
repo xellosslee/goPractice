@@ -1,4 +1,4 @@
-package httpHandlers
+package httphandlers
 
 import (
 	"io/ioutil"
@@ -6,9 +6,9 @@ import (
 
 	"encoding/json"
 
-	"cndf.order.was/httpHandlers/httpUtils"
+	"cndf.order.was/httphandlers/httputils"
+	"cndf.order.was/model"
 	"cndf.order.was/storage"
-	"cndf.order.was/structs"
 )
 
 func Remove(w http.ResponseWriter, r *http.Request) {
@@ -16,27 +16,27 @@ func Remove(w http.ResponseWriter, r *http.Request) {
 	requestBody, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
-		httpUtils.HandleError(&w, 500, "Internal Server Error", "Error reading data from body", err)
+		httputils.ResponseError(&w, 500, "Internal Server Error", "Error reading data from body", err)
 		return
 	}
 
-	var id structs.ID
+	var users model.Users
 
-	err = json.Unmarshal(requestBody, &id)
+	err = json.Unmarshal(requestBody, &users)
 
 	if err != nil {
-		httpUtils.HandleError(&w, 400, "Bad Request", "Error unmarshalling", err)
+		httputils.ResponseError(&w, 400, "Bad Request", "Error unmarshalling", err)
 		return
 	}
 
-	if id.ID == 0 {
-		httpUtils.HandleError(&w, 500, "Bad Request", "ID not provided", nil)
+	if users.ID == 0 {
+		httputils.ResponseError(&w, 500, "Bad Request", "ID not provided", nil)
 		return
 	}
 
-	if storage.Remove(id.ID) {
-		httpUtils.HandleSuccess(&w, structs.ID{ID: id.ID})
+	if storage.Remove(users.ID) {
+		httputils.ResponseJSON(&w, model.Users{ID: users.ID})
 	} else {
-		httpUtils.HandleError(&w, 400, "Bad Request", "ID not found", nil)
+		httputils.ResponseError(&w, 400, "Bad Request", "ID not found", nil)
 	}
 }

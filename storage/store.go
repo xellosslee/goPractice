@@ -1,23 +1,26 @@
 package storage
 
 import (
-	"cndf.order.was/structs"
+	"cndf.order.was/model"
 )
 
-var store structs.MessageList
-var currentMaxId = 1
+var store model.MessageList
+var currentMaxID = 1
 
-func Get() structs.MessageList {
+// Get 메모리에 담긴 메시지 목록 전달
+func Get() model.MessageList {
 	return store
 }
 
-func Add(message structs.Message) int {
-	message.ID = currentMaxId
-	currentMaxId++
+// Add 메모리에 메시지 정보 추가
+func Add(message model.Message) int {
+	message.ID = currentMaxID
+	currentMaxID++
 	store = append(store, message)
 	return message.ID
 }
 
+// Remove 메모리에 담긴 메시지 삭제
 func Remove(id int) bool {
 	index := -1
 

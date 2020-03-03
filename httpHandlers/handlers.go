@@ -1,12 +1,14 @@
-package httpHandlers
+package httphandlers
 
 import (
 	"log"
 	"net/http"
 
-	"cndf.order.was/httpHandlers/httpUtils"
+	"cndf.order.was/httphandlers/httputils"
 )
 
+// HandleRequest 공용 핸들러
+// Get, Post, Delete 메소드를 수신받는다.
 func HandleRequest(w http.ResponseWriter, r *http.Request) {
 	log.Println("Incoming Request:", r.Method)
 	switch r.Method {
@@ -20,11 +22,7 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 		Remove(w, r)
 		break
 	default:
-		httpUtils.HandleError(&w, 405, "Method not allowed", "Method not allowed", nil)
+		httputils.ResponseError(&w, 405, "Method not allowed", "Method not allowed", nil)
 		break
 	}
-}
-
-func test() {
-	log.Fatalln("test log")
 }

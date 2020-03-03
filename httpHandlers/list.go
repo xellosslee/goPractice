@@ -1,12 +1,12 @@
-package httpHandlers
+package httphandlers
 
 import (
 	"net/http"
 
-	"cndf.order.was/httpHandlers/httpUtils"
+	"cndf.order.was/httphandlers/httputils"
 	"cndf.order.was/storage"
 )
 
 func List(w http.ResponseWriter, r *http.Request) {
-	httpUtils.HandleSuccess(&w, storage.Get())
+	httputils.ResponseJSON(&w, storage.Get())
 }

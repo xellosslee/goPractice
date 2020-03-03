@@ -1,17 +1,18 @@
-package httpUtils
+package httputils
 
 import (
 	"encoding/json"
 	"net/http"
 )
 
-func HandleSuccess(w *http.ResponseWriter, result interface{}) {
+// ResponseJSON 공통 http 통신 성공 처리 함수. result 객체는 반드시 json 객체여야 한다.
+func ResponseJSON(w *http.ResponseWriter, result interface{}) {
 	writer := *w
 
 	marshalled, err := json.Marshal(result)
 
 	if err != nil {
-		HandleError(w, 500, "Internal Server Error", "Error marshalling response JSON", err)
+		ResponseError(w, 500, "Internal Server Error", "Error marshalling response JSON", err)
 		return
 	}
 
