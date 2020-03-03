@@ -28,7 +28,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var message model.Message
-
+	// http를 통해 body의 문자열을 json으로 Convert 시도
 	err = json.Unmarshal(byteData, &message)
 
 	if err != nil {
@@ -45,5 +45,6 @@ func Add(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Added message:", message)
 
+	// model.Users 객체의 ID 를 기준으로 데이터를 넣은 뒤 JSON 객체를 리턴한다
 	httputils.ResponseJSON(&w, model.Users{ID: id})
 }

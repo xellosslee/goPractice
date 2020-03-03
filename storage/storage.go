@@ -4,6 +4,8 @@ import (
 	"cndf.order.was/model"
 )
 
+// 이 패키지는 메모리에 저장할 데이터가 필요한 경우 활용 될 수 있음
+
 var store model.MessageList
 var currentMaxID = 1
 
@@ -24,6 +26,7 @@ func Add(message model.Message) int {
 func Remove(id int) bool {
 	index := -1
 
+	// foreach 구문과 비슷하게 loop 수행
 	for i, message := range store {
 		if message.ID == id {
 			index = i
@@ -31,6 +34,9 @@ func Remove(id int) bool {
 	}
 
 	if index != -1 {
+		// 배열에 추가 배열을 만들어서 합치는 append함수와
+		// 배열의 일부만 가져오는 slice 문법을 활용하여
+		// store 리스트객체 내에서 삭제될 index 앞뒤의 Array를 새로운 Array로 조합
 		store = append(store[:index], store[index+1:]...)
 	}
 

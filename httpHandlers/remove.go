@@ -21,7 +21,7 @@ func Remove(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var users model.Users
-
+	// http를 통해 body의 문자열을 json으로 Convert 시도
 	err = json.Unmarshal(requestBody, &users)
 
 	if err != nil {
@@ -34,6 +34,7 @@ func Remove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Remove후 결과를 리턴
 	if storage.Remove(users.ID) {
 		httputils.ResponseJSON(&w, model.Users{ID: users.ID})
 	} else {
