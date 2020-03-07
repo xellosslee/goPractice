@@ -1,7 +1,6 @@
 package storage_test
 
 import (
-	"fmt"
 	"log"
 	"testing"
 
@@ -25,35 +24,73 @@ func TestConnectDB(t *testing.T) {
 
 	db := storage.ConnectDB()
 	// Simple CRUD Test
-	rows := storage.Query(db, "INSERT INTO users (name, login_id) VALUES(?,?)", "관리자", "gslee")
-	// 적용된 rows 개수를 가져와서 0건이면 에러
-	// 	t.Error("Wrong result")
+	res := storage.Execute(db, "INSERT INTO users (name, login_id) VALUES(?,?)", "관리자", "gslee")
+	// 적용된 res 개수를 가져와서 0건이면 에러
+	cnt, err := res.RowsAffected()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if cnt == 0 {
+		t.Error("Insert RowsAffected is 0")
+	}
+	insertId, err := res.LastInsertId()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if insertId == 0 {
+		t.Error("Insert pk is 0")
+	}
 
-	var id int
+	log.Println("insertId ", insertId)
+
+	// 방금 추가한 레코드 한건 PK 값으로 조회
+	var id int64
 	var name, login_id string
+	row := storage.SelectOne(db, "SELECT id, name, login_id FROM users WHERE id = ?", insertId)
+	err = row.Scan(&id, &name, &login_id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("SelectOne ", id, "_", name, "_", login_id)
+
+	// users 테이블 전체 조회
 	var users []model.Users
-	rows = storage.Query(db, "SELECT id, name, login_id FROM users WHERE login_id = ?", "gslee")
-	// 조회결과가 0건이면 에러
+	rows := storage.Select(db, "SELECT id, name, login_id FROM users")
 	for rows.Next() {
 		err := rows.Scan(&id, &name, &login_id)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(id, name, login_id)
-		// pk값(id)을 뽑아서 배열에 저장
+		log.Println("Select Users ", id, "_", name, "_", login_id)
+		// 배열에 저장
 		users = append(users, model.Users{ID: id, Name: name, LoginID: login_id})
 	}
 
-	for i, v := range users {
-		if i == 0 {
-			// 첫번째 row는 name값을 변경
-			storage.Query(db, "UPDATE users SET Name = ? WHERE id = ?", "test", v.ID)
-			// Update 결과가 0건이면 에러
-		} else {
-			// 나머지 row는 제거
-			storage.Query(db, "DELETE FROM users WHERE id = ?", v.ID)
-			// Delete 수행 했는데 결과가 0건이면 에러 - delete 할 내용이 없는 경우 에러로 체크 될 일 없음
-		}
+	// 방금 추가한 항목의 이름을 test로 변경
+	res = storage.Execute(db, "UPDATE users SET Name = ? WHERE id = ?", "test", insertId)
+	cnt, err = res.RowsAffected()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if cnt == 0 {
+		t.Error("Update result count is 0")
+	}
+	// 업데이트 결과를 다시 조회해서 로그 적음
+	row = storage.SelectOne(db, "SELECT id, name, login_id FROM users WHERE id = ?", insertId)
+	err = row.Scan(&id, &name, &login_id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("SelectOne ", id, "_", name, "_", login_id)
+
+	// DELETE 수행
+	res = storage.Execute(db, "DELETE FROM users WHERE id = ?", insertId)
+	cnt, err = res.RowsAffected()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if cnt == 0 {
+		t.Error("Delete result count is 0")
 	}
 
 	rows.Close()

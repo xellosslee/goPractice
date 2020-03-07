@@ -14,7 +14,7 @@ import (
 // 기본 포트는 8080포트
 const PORT = 8080
 
-var messageId = 0
+var messageId int64 = 0
 
 // createMessage 더미 메시지 생성
 func createMessage(message string, sender string) model.Message {

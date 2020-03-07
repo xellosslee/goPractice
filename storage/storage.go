@@ -7,7 +7,7 @@ import (
 // 이 패키지는 메모리에 저장할 데이터가 필요한 경우 활용 될 수 있음
 
 var store model.MessageList
-var currentMaxID = 1
+var currentMaxID int64 = 1
 
 // Get 메모리에 담긴 메시지 목록 전달
 func Get() model.MessageList {
@@ -15,7 +15,7 @@ func Get() model.MessageList {
 }
 
 // Add 메모리에 메시지 정보 추가
-func Add(message model.Message) int {
+func Add(message model.Message) int64 {
 	message.ID = currentMaxID
 	currentMaxID++
 	store = append(store, message)
@@ -23,7 +23,7 @@ func Add(message model.Message) int {
 }
 
 // Remove 메모리에 담긴 메시지 삭제
-func Remove(id int) bool {
+func Remove(id int64) bool {
 	index := -1
 
 	// foreach 구문과 비슷하게 loop 수행
