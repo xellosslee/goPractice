@@ -37,6 +37,20 @@ func Select(db *sql.DB, query string, args ...interface{}) *sql.Rows {
 	return conn
 }
 
+// SelectPaging 페이지 처리를 하는 조회 쿼리를 수행 할 때 사용
+// pagingType이 limit 이거나 공백이면 args 끝에 pageStart, pageCount 두개의 값은 필수
+func SelectPaging(db *sql.DB, query string, pagingType string, args ...interface{}) *sql.Rows {
+	var rows *sql.Rows
+	var err error
+	if pagingType == "limit" || pagingType == "" {
+		rows, err = db.Query("SELECT * FROM ("+query+") t LIMIT ?, ?", args...)
+	} else {
+		rows, err = db.Query("SELECT * FROM ("+query+") t LIMIT ?", args...)
+	}
+	checkErr(err)
+	return rows
+}
+
 // Execute 실행류의 쿼리를 수행 할 때 사용(INSERT, UPDATE, DELETE)
 func Execute(db *sql.DB, query string, args ...interface{}) sql.Result {
 	stmt, err := db.Prepare(query)

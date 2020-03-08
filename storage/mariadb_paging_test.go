@@ -68,5 +68,5 @@ func TestPagination(t *testing.T) {
 		}
 	}
 
-	rows.Close()
+	defer rows.Close()
 }

@@ -93,5 +93,5 @@ func TestConnectDB(t *testing.T) {
 		t.Error("Delete result count is 0")
 	}
 
-	rows.Close()
+	defer rows.Close()
 }
