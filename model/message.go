@@ -6,3 +6,9 @@ type Message struct {
 	Sender  string `json:"sender"`
 	Message string `json:"message"`
 }
+
+// Users 유저 배열 객체
+var (
+	Messages   = map[int]*Message{}
+	MessageSeq = 1
+)

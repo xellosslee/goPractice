@@ -54,7 +54,7 @@ func TestConnectDB(t *testing.T) {
 	log.Println("SelectOne ", id, "_", name, "_", login_id)
 
 	// users 테이블 전체 조회
-	var users []model.Users
+	var users []model.User
 	rows := storage.Select(db, "SELECT id, name, login_id FROM users")
 	for rows.Next() {
 		err := rows.Scan(&id, &name, &login_id)
@@ -63,7 +63,7 @@ func TestConnectDB(t *testing.T) {
 		}
 		log.Println("Select Users ", id, "_", name, "_", login_id)
 		// 배열에 저장
-		users = append(users, model.Users{ID: id, Name: name, LoginID: login_id})
+		users = append(users, model.User{ID: id, Name: name, LoginID: login_id})
 	}
 
 	// 방금 추가한 항목의 이름을 test로 변경

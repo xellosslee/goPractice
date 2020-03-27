@@ -2,17 +2,15 @@
 package main
 
 import (
-	"log"
-	"net/http"
 	"strconv"
 
-	"cndf.order.was/httphandlers"
 	"cndf.order.was/model"
-	"cndf.order.was/storage"
+	"cndf.order.was/route"
+	"github.com/labstack/echo"
 )
 
-// 기본 포트는 8080포트
-const PORT = 8080
+// 기본 포트 81
+const PORT = 81
 
 var messageId int64 = 0
 
@@ -28,26 +26,28 @@ func createMessage(message string, sender string) model.Message {
 
 // main 프로그램의 시작점
 func main() {
-	log.Println("Creating dummy messages")
 
-	storage.Add(createMessage("Testing", "1234"))
-	storage.Add(createMessage("Testing Again", "5678"))
-	storage.Add(createMessage("Testing A Third Time", "9012"))
+	e := echo.New()
 
-	log.Println(storage.Get())
+	e.Logger.Info("Attempting to start HTTP Server.")
 
-	log.Println("Attempting to start HTTP Server.")
+	e.GET("/", route.HelloWorld)
+	e.GET("/user", route.UserList)
+	e.GET("/user/:id", route.UserGet)
+	e.PUT("/user", route.UserPut)
+	e.DELETE("/user/:id", route.UserDelete)
+	e.Logger.Fatal(e.Start(":" + strconv.Itoa(PORT)))
 
-	// 특정 url주소로 Request가 들어올 경우 처리하는 handler함수를 할당 HandleRequest
-	http.HandleFunc("/message", httphandlers.HandleRequest)
+	// // 특정 url주소로 Request가 들어올 경우 처리하는 handler함수를 할당 HandleRequest
+	// http.HandleFunc("/message", httphandlers.HandleRequest)
 
-	// http WAS 서비스 온!
-	var err = http.ListenAndServe(":"+strconv.Itoa(PORT), nil)
+	// // http WAS 서비스 온!
+	// var err = http.ListenAndServe(":"+strconv.Itoa(PORT), nil)
 
-	// 로그 작성 후 main 함수는 끗 이후에는 http를 통해 request가 오면 callback 하는 보통의 WAS와 동일
-	if err != nil {
-		log.Panicln("Server failed starting. Error: ", err)
-	} else {
-		log.Panicln("Server starting. At ", PORT, " Port")
-	}
+	// // 로그 작성 후 main 함수는 끗 이후에는 http를 통해 request가 오면 callback 하는 보통의 WAS와 동일
+	// if err != nil {
+	// 	log.Panicln("Server failed starting. Error: ", err)
+	// } else {
+	// 	log.Panicln("Server starting. At ", PORT, " Port")
+	// }
 }
