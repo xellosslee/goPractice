@@ -2,6 +2,7 @@
 package main
 
 import (
+	"net/http"
 	"strconv"
 
 	"cndf.order.was/model"
@@ -31,7 +32,9 @@ func main() {
 
 	e.Logger.Info("Attempting to start HTTP Server.")
 
-	e.GET("/", route.HelloWorld)
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "hello, World!")
+	})
 	e.GET("/user", route.UserList)
 	e.GET("/user/:id", route.UserGet)
 	e.PUT("/user", route.UserPut)

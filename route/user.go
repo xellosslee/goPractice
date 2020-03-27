@@ -8,10 +8,6 @@ import (
 	"github.com/labstack/echo"
 )
 
-func HelloWorld(c echo.Context) error {
-	return c.String(http.StatusOK, "hello, World!")
-}
-
 func UserList(c echo.Context) error {
 	return c.JSON(http.StatusOK, model.Users)
 }
