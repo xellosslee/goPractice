@@ -2,6 +2,7 @@ package route
 
 import (
 	"net/http"
+	"sort"
 	"strconv"
 
 	"cndf.order.was/model"
@@ -9,11 +10,22 @@ import (
 )
 
 func UserList(c echo.Context) error {
-	return c.JSON(http.StatusOK, model.Users)
+	// sort.Slice(model.Users, func(i, j int) bool { return model.Users[i].ID < model.Users[j].ID })
+	keys := make([]int, 0)
+	for k, _ := range model.Users { // 첫번째 값인 ID 가 k로 넘어와서 해당 값을 배열에 넣음
+		keys = append(keys, k)
+	}
+	sort.Ints(keys) // ID값을 기준으로 데이터 정렬
+	var result []*model.User
+	for _, k := range keys {
+		result = append(result, model.Users[k])
+	}
+
+	return c.JSON(http.StatusOK, result)
 }
 
 func UserGet(c echo.Context) error {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, _ := strconv.Atoi(c.Param("id"))
 	return c.JSON(http.StatusOK, model.Users[id])
 }
 
@@ -39,7 +51,7 @@ func UserPut(c echo.Context) error {
 }
 
 func UserDelete(c echo.Context) error {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, _ := strconv.Atoi(c.Param("id"))
 	delete(model.Users, id)
 	return c.NoContent(http.StatusNoContent)
 }

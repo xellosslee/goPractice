@@ -2,7 +2,7 @@ package model
 
 // User 유저정보 객체
 type User struct {
-	ID         int64  `json:"id"`
+	ID         int    `json:"id"`
 	Name       string `json:"name"`
 	LoginID    string `json:"loginId"`
 	CreateDate string `json:"createDate"`
@@ -11,6 +11,6 @@ type User struct {
 
 // Users 유저 배열 객체
 var (
-	Users         = map[int64]*User{}
-	UserSeq int64 = 1
+	Users       = map[int]*User{}
+	UserSeq int = 1
 )

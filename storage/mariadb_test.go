@@ -44,7 +44,7 @@ func TestConnectDB(t *testing.T) {
 	log.Println("insertId ", insertId)
 
 	// 방금 추가한 레코드 한건 PK 값으로 조회
-	var id int64
+	var id int
 	var name, login_id string
 	row := storage.SelectOne(db, "SELECT id, name, login_id FROM users WHERE id = ?", insertId)
 	err = row.Scan(&id, &name, &login_id)
