@@ -7,7 +7,10 @@ import (
 
 	"cndf.order.was/model"
 	"github.com/labstack/echo"
+	"github.com/op/go-logging"
 )
+
+var log = logging.MustGetLogger("cndf.order.was")
 
 // SetUserRouters Controller 역활
 func SetUserRouters(e *echo.Echo) {
@@ -29,6 +32,8 @@ func userList(c echo.Context) error {
 	for _, k := range keys {
 		result = append(result, model.Users[k])
 	}
+
+	log.Info("test2")
 
 	return c.JSON(http.StatusOK, result)
 }
