@@ -1,6 +1,6 @@
-- run:
+run:
 	@go run main.go bin/server.exe
 
-- build:
+build:
 	@go build -o bin/server.exe main.go
 	@bin/server.exe
