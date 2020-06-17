@@ -14,9 +14,15 @@ var log = logging.MustGetLogger("cndf.order.was")
 
 // SetUserRouters Controller 역활
 func SetUserRouters(e *echo.Echo) {
+	// 유저 목록 조회
 	e.GET("/user", userList)
-	e.GET("/user/:id", userGet)
+	// 유저 PK id 로 조회
+	e.GET("/user/:id", userGetID)
+	// 유저 loginID 로 조회
+	e.GET("/user/id/:loginID", userGetLoginID)
+	// 유저 추가
 	e.PUT("/user", userPut)
+	// 유저 Pk id 로 삭제
 	e.DELETE("/user/:id", userDelete)
 }
 
@@ -50,8 +56,7 @@ func userList(c echo.Context) error {
 	return c.JSON(http.StatusOK, users)
 }
 
-// Service 함수 역활
-func userGet(c echo.Context) error {
+func userGetID(c echo.Context) error {
 	log.Debug("called userGet")
 
 	searchID, err := strconv.Atoi(c.Param("id"))
@@ -77,7 +82,32 @@ func userGet(c echo.Context) error {
 	return c.JSON(http.StatusOK, model.UserInfo{ID: id, Name: name, LoginID: loginID})
 }
 
-// Service 함수 역활
+func userGetLoginID(c echo.Context) error {
+	log.Debug("called userGet")
+
+	searchLoginID, err := strconv.Atoi(c.Param("loginID"))
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "잘못된 파라미터가 전달되었습니다")
+	}
+	db, err := storage.ConnectDB()
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "DB 연결 실패")
+	}
+	var id int64
+	var name, loginID string
+	row := storage.SelectOne(db, "SELECT id, name, login_id FROM users WHERE login_id = ?", searchLoginID)
+	err = row.Scan(&id, &name, &loginID)
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusNotFound, "해당 유저가 없습니다.")
+	}
+	log.Info("SelectOne ", id, "_", name, "_", loginID)
+
+	return c.JSON(http.StatusOK, model.UserInfo{ID: id, Name: name, LoginID: loginID})
+}
+
 func userPut(c echo.Context) error {
 	log.Debug("called userPut")
 	u := &model.UserInfo{}
@@ -118,7 +148,6 @@ func userPut(c echo.Context) error {
 	return c.JSON(http.StatusOK, u)
 }
 
-// Service 함수 역활
 func userDelete(c echo.Context) error {
 	log.Debug("called userDelete")
 	id, _ := strconv.Atoi(c.Param("id"))
