@@ -9,10 +9,19 @@ import (
 	"github.com/labstack/echo"
 )
 
-func UserList(c echo.Context) error {
+// SetUserRouters Controller 역활
+func SetUserRouters(e *echo.Echo) {
+	e.GET("/user", userList)
+	e.GET("/user/:id", userGet)
+	e.PUT("/user", userPut)
+	e.DELETE("/user/:id", userDelete)
+}
+
+// Service 함수 역활
+func userList(c echo.Context) error {
 	// sort.Slice(model.Users, func(i, j int) bool { return model.Users[i].ID < model.Users[j].ID })
 	keys := make([]int, 0)
-	for k, _ := range model.Users { // 첫번째 값인 ID 가 k로 넘어와서 해당 값을 배열에 넣음
+	for k := range model.Users { // 첫번째 값인 ID 가 k로 넘어와서 해당 값을 배열에 넣음
 		keys = append(keys, k)
 	}
 	sort.Ints(keys) // ID값을 기준으로 데이터 정렬
@@ -24,12 +33,14 @@ func UserList(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-func UserGet(c echo.Context) error {
+// Service 함수 역활
+func userGet(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 	return c.JSON(http.StatusOK, model.Users[id])
 }
 
-func UserPut(c echo.Context) error {
+// Service 함수 역활
+func userPut(c echo.Context) error {
 	u := &model.User{
 		ID: model.UserSeq,
 	}
@@ -50,7 +61,8 @@ func UserPut(c echo.Context) error {
 	return c.JSON(http.StatusOK, u)
 }
 
-func UserDelete(c echo.Context) error {
+// Service 함수 역활
+func userDelete(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 	delete(model.Users, id)
 	return c.NoContent(http.StatusNoContent)
