@@ -22,7 +22,10 @@ CREATE TABLE `users` (
 
 func TestPagination(t *testing.T) {
 
-	db := storage.ConnectDB()
+	db, err := storage.ConnectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
 	var id int64
 	var name, login_id string
 
@@ -42,9 +45,12 @@ func TestPagination(t *testing.T) {
 		if pagingType == "id" {
 			// id 가 0인 경우는 없으므로 최초 배열부터 가져옴
 			// 반드시 정렬 순서가 정해져 있어야 함
-			rows = storage.Select(db, "SELECT id, name, login_id FROM users WHERE id > ? ORDER BY id ASC LIMIT ?", lastestId, getCount)
+			rows, err = storage.Select(db, "SELECT id, name, login_id FROM users WHERE id > ? ORDER BY id ASC LIMIT ?", lastestId, getCount)
 		} else {
-			rows = storage.Select(db, "SELECT id, name, login_id FROM users LIMIT ?, ?", (pageNum-1)*getCount, getCount)
+			rows, err = storage.Select(db, "SELECT id, name, login_id FROM users LIMIT ?, ?", (pageNum-1)*getCount, getCount)
+		}
+		if err != nil {
+			log.Fatal(err)
 		}
 		var pageCnt = 0
 		for rows.Next() {

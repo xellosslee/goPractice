@@ -2,10 +2,10 @@ package route
 
 import (
 	"net/http"
-	"sort"
 	"strconv"
 
 	"cndf.order.was/model"
+	"cndf.order.was/storage"
 	"github.com/labstack/echo"
 	"github.com/op/go-logging"
 )
@@ -22,53 +22,126 @@ func SetUserRouters(e *echo.Echo) {
 
 // Service 함수 역활
 func userList(c echo.Context) error {
-	// sort.Slice(model.Users, func(i, j int) bool { return model.Users[i].ID < model.Users[j].ID })
-	keys := make([]int, 0)
-	for k := range model.Users { // 첫번째 값인 ID 가 k로 넘어와서 해당 값을 배열에 넣음
-		keys = append(keys, k)
+	log.Debug("called userList")
+	db, err := storage.ConnectDB()
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "DB 연결 실패")
 	}
-	sort.Ints(keys) // ID값을 기준으로 데이터 정렬
-	var result []*model.User
-	for _, k := range keys {
-		result = append(result, model.Users[k])
+	var id int64
+	var name, loginID string
+	var users []model.UserInfo
+	rows, err := storage.Select(db, "SELECT id, name, login_id FROM users")
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "사용자 조회 실패")
+	}
+	for rows.Next() {
+		err := rows.Scan(&id, &name, &loginID)
+		if err != nil {
+			log.Error(err)
+			return echo.NewHTTPError(http.StatusBadRequest, "사용자 조회 실패")
+		}
+		log.Debug("Select Users ", id, "_", name, "_", loginID)
+		// 배열에 저장
+		users = append(users, model.UserInfo{ID: id, Name: name, LoginID: loginID})
 	}
 
-	log.Info("test2")
-
-	return c.JSON(http.StatusOK, result)
+	return c.JSON(http.StatusOK, users)
 }
 
 // Service 함수 역활
 func userGet(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
-	return c.JSON(http.StatusOK, model.Users[id])
+	log.Debug("called userGet")
+
+	searchID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "잘못된 파라미터가 전달되었습니다")
+	}
+	db, err := storage.ConnectDB()
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "DB 연결 실패")
+	}
+	var id int64
+	var name, loginID string
+	row := storage.SelectOne(db, "SELECT id, name, login_id FROM users WHERE id = ?", searchID)
+	err = row.Scan(&id, &name, &loginID)
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusNotFound, "해당 유저가 없습니다.")
+	}
+	log.Info("SelectOne ", id, "_", name, "_", loginID)
+
+	return c.JSON(http.StatusOK, model.UserInfo{ID: id, Name: name, LoginID: loginID})
 }
 
 // Service 함수 역활
 func userPut(c echo.Context) error {
-	u := &model.User{
-		ID: model.UserSeq,
-	}
+	log.Debug("called userPut")
+	u := &model.UserInfo{}
 	if err := c.Bind(u); err != nil {
 		return err
 	}
-
-	// id값이 Client 로부터 전송된 경우 수정이므로 update처리
-	if u.ID != model.UserSeq {
-		model.Users[u.ID] = u
-		model.UserSeq++
-	} else {
-		// id값이 넘어오지 않은 경우 초기화 된 UserSeq와 같은 값이므로 유저 추가
-		model.Users[u.ID] = u
-		model.UserSeq++
+	db, err := storage.ConnectDB()
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "DB 연결 실패")
 	}
+	res, err := storage.Execute(db, "INSERT INTO users (name, login_id) VALUES(?,?)", u.Name, u.LoginID)
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusNotAcceptable, "Duplicate Users")
+	}
+	// 적용된 res 개수를 가져와서 0건이면 에러
+	cnt, err := res.RowsAffected()
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "사용자 추가 실패")
+	}
+	if cnt == 0 {
+		log.Error("Insert RowsAffected is 0")
+	}
+	lastestID, err := res.LastInsertId()
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "사용자 추가 시 오류가 발생하였습니다.")
+	}
+	if lastestID == 0 {
+		log.Error("Insert pk is cannot be 0")
+		return echo.NewHTTPError(http.StatusBadRequest, "사용자 추가 시 오류가 발생하였습니다.")
+	}
+	u.ID = lastestID
+	log.Info("insertId ", lastestID)
 
 	return c.JSON(http.StatusOK, u)
 }
 
 // Service 함수 역활
 func userDelete(c echo.Context) error {
+	log.Debug("called userDelete")
 	id, _ := strconv.Atoi(c.Param("id"))
-	delete(model.Users, id)
+
+	// DB 버전
+	db, err := storage.ConnectDB()
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "DB 연결 실패")
+	}
+	res, err := storage.Execute(db, "DELETE FROM users WHERE id = ?", id)
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "사용자 삭제 실패")
+	}
+	cnt, err := res.RowsAffected()
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "삭제 건수 가져오기 실패")
+	}
+	if cnt == 0 {
+		log.Error("Delete result count is 0")
+		return echo.NewHTTPError(http.StatusBadRequest, "삭제할 사용자가 없습니다.")
+	}
 	return c.NoContent(http.StatusNoContent)
 }

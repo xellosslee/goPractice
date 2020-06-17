@@ -22,9 +22,15 @@ CREATE TABLE `users` (
 
 func TestConnectDB(t *testing.T) {
 
-	db := storage.ConnectDB()
+	db, err := storage.ConnectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
 	// Simple CRUD Test
-	res := storage.Execute(db, "INSERT INTO users (name, login_id) VALUES(?,?)", "관리자", "gslee")
+	res, err := storage.Execute(db, "INSERT INTO users (name, login_id) VALUES(?,?)", "관리자", "gslee")
+	if err != nil {
+		log.Fatal(err)
+	}
 	// 적용된 res 개수를 가져와서 0건이면 에러
 	cnt, err := res.RowsAffected()
 	if err != nil {
@@ -55,7 +61,10 @@ func TestConnectDB(t *testing.T) {
 
 	// users 테이블 전체 조회
 	var users []model.User
-	rows := storage.Select(db, "SELECT id, name, login_id FROM users")
+	rows, err := storage.Select(db, "SELECT id, name, login_id FROM users")
+	if err != nil {
+		log.Fatal(err)
+	}
 	for rows.Next() {
 		err := rows.Scan(&id, &name, &login_id)
 		if err != nil {
@@ -67,7 +76,10 @@ func TestConnectDB(t *testing.T) {
 	}
 
 	// 방금 추가한 항목의 이름을 test로 변경
-	res = storage.Execute(db, "UPDATE users SET Name = ? WHERE id = ?", "test", insertId)
+	res, err = storage.Execute(db, "UPDATE users SET Name = ? WHERE id = ?", "test", insertId)
+	if err != nil {
+		log.Fatal(err)
+	}
 	cnt, err = res.RowsAffected()
 	if err != nil {
 		log.Fatal(err)
@@ -84,7 +96,10 @@ func TestConnectDB(t *testing.T) {
 	log.Println("SelectOne ", id, "_", name, "_", login_id)
 
 	// DELETE 수행
-	res = storage.Execute(db, "DELETE FROM users WHERE id = ?", insertId)
+	res, err = storage.Execute(db, "DELETE FROM users WHERE id = ?", insertId)
+	if err != nil {
+		log.Fatal(err)
+	}
 	cnt, err = res.RowsAffected()
 	if err != nil {
 		log.Fatal(err)
