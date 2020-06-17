@@ -1,6 +1,7 @@
 package route
 
 import (
+	"database/sql"
 	"net/http"
 	"strconv"
 
@@ -16,6 +17,8 @@ var log = logging.MustGetLogger("cndf.order.was")
 func SetUserRouters(e *echo.Echo) {
 	// 유저 목록 조회
 	e.GET("/user", userList)
+	// 유저 페이징 조회
+	e.POST("/userPage", userPage)
 	// 유저 PK id 로 조회
 	e.GET("/user/:id", userGetID)
 	// 유저 loginID 로 조회
@@ -26,7 +29,6 @@ func SetUserRouters(e *echo.Echo) {
 	e.DELETE("/user/:id", userDelete)
 }
 
-// Service 함수 역활
 func userList(c echo.Context) error {
 	log.Debug("called userList")
 	db, err := storage.ConnectDB()
@@ -173,4 +175,69 @@ func userDelete(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "삭제할 사용자가 없습니다.")
 	}
 	return c.NoContent(http.StatusNoContent)
+}
+
+func userPage(c echo.Context) error {
+	var id int64
+	var name, loginID string
+	p := &model.Page{
+		PageType: "num", // id, num
+		Page:     1,
+		Num:      20,
+		ID:       0,
+	}
+	if err := c.Bind(p); err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "잘못된 파라미터가 호출되었습니다.")
+	}
+	db, err := storage.ConnectDB()
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "DB 연결 실패")
+	}
+	var rows *sql.Rows
+	var users []model.UserInfo
+	if p.PageType == "id" {
+		// id 가 0인 경우는 없으므로 최초 배열부터 가져옴
+		// 반드시 정렬 순서가 정해져 있어야 함
+		rows, err = storage.Select(db, "SELECT id, name, login_id FROM users WHERE id > ? ORDER BY id ASC LIMIT ?", p.ID, p.Num)
+	} else {
+		rows, err = storage.Select(db, "SELECT id, name, login_id FROM users LIMIT ?, ?", (p.Page-1)*p.Num, p.Num)
+	}
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "유저 조회 실패")
+	}
+	var pageCnt = 0
+	for rows.Next() {
+		pageCnt++
+		err := rows.Scan(&id, &name, &loginID)
+		if err != nil {
+			log.Error(err)
+			return echo.NewHTTPError(http.StatusBadRequest, "유저 조회 실패")
+		}
+		// 배열에 저장
+		users = append(users, model.UserInfo{ID: id, Name: name, LoginID: loginID})
+
+		if p.PageType == "id" {
+			log.Debug("SELECT users Pagination By PrimaryKey Value ", p.ID, " user : ", id, "_", name, "_", loginID)
+		} else {
+			log.Debug("SELECT users Pagination By p.Page ", p.Page, " user : ", id, "_", name, "_", loginID)
+		}
+	}
+
+	defer rows.Close()
+
+	var pageInfo model.PageInfo
+	row := storage.SelectOne(db, "SELECT COUNT(*) totalCounts, CEIL(COUNT(*) / ?) totalPages FROM users", p.Num)
+	err = row.Scan(&pageInfo.TotalCounts, &pageInfo.TotalPages)
+	if err != nil {
+		log.Error(err)
+		return echo.NewHTTPError(http.StatusNotFound, "유저 조회 실패")
+	}
+	var result model.PageResult
+	result.PageInfo = pageInfo
+	result.Result = users
+
+	return c.JSON(http.StatusOK, result)
 }
