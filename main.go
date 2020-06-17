@@ -21,6 +21,18 @@ func main() {
 
 	e := echo.New()
 
+	initLogConfig(e)
+
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Cndfactory go web application server")
+	})
+
+	route.SetUserRouters(e)
+
+	e.Logger.Fatal(e.Start(":80"))
+}
+
+func initLogConfig(e *echo.Echo) {
 	debugLog, err := os.OpenFile("log/debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err)
@@ -73,12 +85,4 @@ func main() {
 		Format: "[${time_rfc3339}] method=${method}, uri=${uri}, status=${status}\n",
 		Output: fpLog,
 	}))
-
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "hello, World!")
-	})
-
-	route.SetUserRouters(e)
-
-	e.Logger.Fatal(e.Start(":80"))
 }
