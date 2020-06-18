@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"cndf.order.was/model"
 	"cndf.order.was/storage"
@@ -34,7 +35,7 @@ func userList(c echo.Context) error {
 	db, err := storage.ConnectDB()
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "DB 연결 실패")
+		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgDbConnection)
 	}
 	var id int64
 	var name, loginID string
@@ -42,13 +43,13 @@ func userList(c echo.Context) error {
 	rows, err := storage.Select(db, "SELECT id, name, login_id FROM users")
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "사용자 조회 실패")
+		return echo.NewHTTPError(http.StatusBadRequest, strings.Replace(model.ErrMsgNotExists, "@", "유저", 1))
 	}
 	for rows.Next() {
 		err := rows.Scan(&id, &name, &loginID)
 		if err != nil {
 			log.Error(err)
-			return echo.NewHTTPError(http.StatusBadRequest, "사용자 조회 실패")
+			return echo.NewHTTPError(http.StatusBadRequest, strings.Replace(model.ErrMsgNotExists, "@", "유저", 1))
 		}
 		log.Debug("Select Users ", id, "_", name, "_", loginID)
 		// 배열에 저장
@@ -64,12 +65,12 @@ func userGetID(c echo.Context) error {
 	searchID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "잘못된 파라미터가 전달되었습니다")
+		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgWorngParam)
 	}
 	db, err := storage.ConnectDB()
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "DB 연결 실패")
+		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgDbConnection)
 	}
 	var id int64
 	var name, loginID string
@@ -77,7 +78,7 @@ func userGetID(c echo.Context) error {
 	err = row.Scan(&id, &name, &loginID)
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusNotFound, "해당 유저가 없습니다.")
+		return echo.NewHTTPError(http.StatusNotFound, strings.Replace(model.ErrMsgNotExists, "@", "유저", 1))
 	}
 	log.Info("SelectOne ", id, "_", name, "_", loginID)
 
@@ -90,12 +91,12 @@ func userGetLoginID(c echo.Context) error {
 	searchLoginID, err := strconv.Atoi(c.Param("loginID"))
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "잘못된 파라미터가 전달되었습니다")
+		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgWorngParam)
 	}
 	db, err := storage.ConnectDB()
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "DB 연결 실패")
+		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgDbConnection)
 	}
 	var id int64
 	var name, loginID string
@@ -103,7 +104,7 @@ func userGetLoginID(c echo.Context) error {
 	err = row.Scan(&id, &name, &loginID)
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusNotFound, "해당 유저가 없습니다.")
+		return echo.NewHTTPError(http.StatusNotFound, strings.Replace(model.ErrMsgNotExists, "@", "유저", 1))
 	}
 	log.Info("SelectOne ", id, "_", name, "_", loginID)
 
@@ -119,18 +120,18 @@ func userPut(c echo.Context) error {
 	db, err := storage.ConnectDB()
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "DB 연결 실패")
+		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgDbConnection)
 	}
 	res, err := storage.Execute(db, "INSERT INTO users (name, login_id) VALUES(?,?)", u.Name, u.LoginID)
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusNotAcceptable, "Duplicate Users")
+		return echo.NewHTTPError(http.StatusNotAcceptable, strings.Replace(model.ErrMsgDuplicate, "@", "유저", 1))
 	}
 	// 적용된 res 개수를 가져와서 0건이면 에러
 	cnt, err := res.RowsAffected()
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "사용자 추가 실패")
+		return echo.NewHTTPError(http.StatusBadRequest, strings.Replace(model.ErrMsgProcFail, "@", "유저등록", 1))
 	}
 	if cnt == 0 {
 		log.Error("Insert RowsAffected is 0")
@@ -138,11 +139,11 @@ func userPut(c echo.Context) error {
 	lastestID, err := res.LastInsertId()
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "사용자 추가 시 오류가 발생하였습니다.")
+		return echo.NewHTTPError(http.StatusBadRequest, strings.Replace(model.ErrMsgProcFail, "@", "유저등록", 1))
 	}
 	if lastestID == 0 {
 		log.Error("Insert pk is cannot be 0")
-		return echo.NewHTTPError(http.StatusBadRequest, "사용자 추가 시 오류가 발생하였습니다.")
+		return echo.NewHTTPError(http.StatusBadRequest, strings.Replace(model.ErrMsgProcFail, "@", "유저등록", 1))
 	}
 	u.ID = lastestID
 	log.Info("insertId ", lastestID)
@@ -158,21 +159,21 @@ func userDelete(c echo.Context) error {
 	db, err := storage.ConnectDB()
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "DB 연결 실패")
+		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgDbConnection)
 	}
 	res, err := storage.Execute(db, "DELETE FROM users WHERE id = ?", id)
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "사용자 삭제 실패")
+		return echo.NewHTTPError(http.StatusBadRequest, strings.Replace(model.ErrMsgProcFail, "@", "삭제", 1))
 	}
 	cnt, err := res.RowsAffected()
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "삭제 건수 가져오기 실패")
+		return echo.NewHTTPError(http.StatusBadRequest, strings.Replace(model.ErrMsgProcFail, "@", "삭제", 1))
 	}
 	if cnt == 0 {
 		log.Error("Delete result count is 0")
-		return echo.NewHTTPError(http.StatusBadRequest, "삭제할 사용자가 없습니다.")
+		return echo.NewHTTPError(http.StatusBadRequest, strings.Replace(model.ErrMsgProcFail, "@", "삭제", 1))
 	}
 	return c.NoContent(http.StatusNoContent)
 }
@@ -188,12 +189,12 @@ func userPage(c echo.Context) error {
 	}
 	if err := c.Bind(p); err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "잘못된 파라미터가 호출되었습니다.")
+		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgWorngParam)
 	}
 	db, err := storage.ConnectDB()
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "DB 연결 실패")
+		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgDbConnection)
 	}
 	var rows *sql.Rows
 	var users []model.User
@@ -206,7 +207,7 @@ func userPage(c echo.Context) error {
 	}
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, "유저 조회 실패")
+		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgCannotFound)
 	}
 	var pageCnt = 0
 	for rows.Next() {
@@ -214,7 +215,7 @@ func userPage(c echo.Context) error {
 		err := rows.Scan(&id, &name, &loginID)
 		if err != nil {
 			log.Error(err)
-			return echo.NewHTTPError(http.StatusBadRequest, "유저 조회 실패")
+			return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgCannotFound)
 		}
 		// 배열에 저장
 		users = append(users, model.User{ID: id, Name: name, LoginID: loginID})
@@ -233,7 +234,7 @@ func userPage(c echo.Context) error {
 	err = row.Scan(&pageInfo.TotalCounts, &pageInfo.TotalPages)
 	if err != nil {
 		log.Error(err)
-		return echo.NewHTTPError(http.StatusNotFound, "유저 조회 실패")
+		return echo.NewHTTPError(http.StatusNotFound, model.ErrMsgCannotFound)
 	}
 	var result model.PageResult
 	result.PageInfo = pageInfo
