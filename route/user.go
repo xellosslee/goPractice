@@ -38,7 +38,7 @@ func userList(c echo.Context) error {
 	}
 	var id int64
 	var name, loginID string
-	var users []model.UserInfo
+	var users []model.User
 	rows, err := storage.Select(db, "SELECT id, name, login_id FROM users")
 	if err != nil {
 		log.Error(err)
@@ -52,7 +52,7 @@ func userList(c echo.Context) error {
 		}
 		log.Debug("Select Users ", id, "_", name, "_", loginID)
 		// 배열에 저장
-		users = append(users, model.UserInfo{ID: id, Name: name, LoginID: loginID})
+		users = append(users, model.User{ID: id, Name: name, LoginID: loginID})
 	}
 
 	return c.JSON(http.StatusOK, users)
@@ -81,7 +81,7 @@ func userGetID(c echo.Context) error {
 	}
 	log.Info("SelectOne ", id, "_", name, "_", loginID)
 
-	return c.JSON(http.StatusOK, model.UserInfo{ID: id, Name: name, LoginID: loginID})
+	return c.JSON(http.StatusOK, model.User{ID: id, Name: name, LoginID: loginID})
 }
 
 func userGetLoginID(c echo.Context) error {
@@ -107,12 +107,12 @@ func userGetLoginID(c echo.Context) error {
 	}
 	log.Info("SelectOne ", id, "_", name, "_", loginID)
 
-	return c.JSON(http.StatusOK, model.UserInfo{ID: id, Name: name, LoginID: loginID})
+	return c.JSON(http.StatusOK, model.User{ID: id, Name: name, LoginID: loginID})
 }
 
 func userPut(c echo.Context) error {
 	log.Debug("called userPut")
-	u := &model.UserInfo{}
+	u := &model.User{}
 	if err := c.Bind(u); err != nil {
 		return err
 	}
@@ -196,7 +196,7 @@ func userPage(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "DB 연결 실패")
 	}
 	var rows *sql.Rows
-	var users []model.UserInfo
+	var users []model.User
 	if p.PageType == "id" {
 		// id 가 0인 경우는 없으므로 최초 배열부터 가져옴
 		// 반드시 정렬 순서가 정해져 있어야 함
@@ -217,7 +217,7 @@ func userPage(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, "유저 조회 실패")
 		}
 		// 배열에 저장
-		users = append(users, model.UserInfo{ID: id, Name: name, LoginID: loginID})
+		users = append(users, model.User{ID: id, Name: name, LoginID: loginID})
 
 		if p.PageType == "id" {
 			log.Debug("SELECT users Pagination By PrimaryKey Value ", p.ID, " user : ", id, "_", name, "_", loginID)
