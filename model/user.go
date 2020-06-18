@@ -16,7 +16,7 @@ type UserInfo struct {
 	LoginID string `json:"loginId"`
 }
 
-// Users 유저 배열 객체
+// User 배열 및 pk 값 : 서버 메모리에 객체를 저장할 때만 사용됨 (테스트용)
 var (
 	Users       = map[int]*User{}
 	UserSeq int = 1
