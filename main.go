@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"cndf.order.was/route"
+	"cndf.order.was/storage"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/op/go-logging"
@@ -28,6 +29,8 @@ func main() {
 	})
 
 	route.SetUserRouters(e)
+
+	storage.ConnectDB()
 
 	e.Logger.Fatal(e.Start(":80"))
 }

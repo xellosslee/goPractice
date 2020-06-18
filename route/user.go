@@ -32,15 +32,11 @@ func SetUserRouters(e *echo.Echo) {
 
 func userList(c echo.Context) error {
 	log.Debug("called userList")
-	db, err := storage.ConnectDB()
-	if err != nil {
-		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgDbConnection)
-	}
+
 	var id int64
 	var name, loginID string
 	var users []model.User
-	rows, err := storage.Select(db, "SELECT id, name, login_id FROM users")
+	rows, err := storage.Select("SELECT id, name, login_id FROM users")
 	if err != nil {
 		log.Error(err)
 		return echo.NewHTTPError(http.StatusBadRequest, strings.Replace(model.ErrMsgNotExists, "@", "유저", 1))
@@ -67,14 +63,9 @@ func userGetID(c echo.Context) error {
 		log.Error(err)
 		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgWorngParam)
 	}
-	db, err := storage.ConnectDB()
-	if err != nil {
-		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgDbConnection)
-	}
 	var id int64
 	var name, loginID string
-	row := storage.SelectOne(db, "SELECT id, name, login_id FROM users WHERE id = ?", searchID)
+	row := storage.SelectOne("SELECT id, name, login_id FROM users WHERE id = ?", searchID)
 	err = row.Scan(&id, &name, &loginID)
 	if err != nil {
 		log.Error(err)
@@ -93,14 +84,9 @@ func userGetLoginID(c echo.Context) error {
 		log.Error(err)
 		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgWorngParam)
 	}
-	db, err := storage.ConnectDB()
-	if err != nil {
-		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgDbConnection)
-	}
 	var id int64
 	var name, loginID string
-	row := storage.SelectOne(db, "SELECT id, name, login_id FROM users WHERE login_id = ?", searchLoginID)
+	row := storage.SelectOne("SELECT id, name, login_id FROM users WHERE login_id = ?", searchLoginID)
 	err = row.Scan(&id, &name, &loginID)
 	if err != nil {
 		log.Error(err)
@@ -117,12 +103,7 @@ func userPut(c echo.Context) error {
 	if err := c.Bind(u); err != nil {
 		return err
 	}
-	db, err := storage.ConnectDB()
-	if err != nil {
-		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgDbConnection)
-	}
-	res, err := storage.Execute(db, "INSERT INTO users (name, login_id) VALUES(?,?)", u.Name, u.LoginID)
+	res, err := storage.Execute("INSERT INTO users (name, login_id) VALUES(?,?)", u.Name, u.LoginID)
 	if err != nil {
 		log.Error(err)
 		return echo.NewHTTPError(http.StatusNotAcceptable, strings.Replace(model.ErrMsgDuplicate, "@", "유저", 1))
@@ -155,13 +136,7 @@ func userDelete(c echo.Context) error {
 	log.Debug("called userDelete")
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	// DB 버전
-	db, err := storage.ConnectDB()
-	if err != nil {
-		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgDbConnection)
-	}
-	res, err := storage.Execute(db, "DELETE FROM users WHERE id = ?", id)
+	res, err := storage.Execute("DELETE FROM users WHERE id = ?", id)
 	if err != nil {
 		log.Error(err)
 		return echo.NewHTTPError(http.StatusBadRequest, strings.Replace(model.ErrMsgProcFail, "@", "삭제", 1))
@@ -175,35 +150,35 @@ func userDelete(c echo.Context) error {
 		log.Error("Delete result count is 0")
 		return echo.NewHTTPError(http.StatusBadRequest, strings.Replace(model.ErrMsgProcFail, "@", "삭제", 1))
 	}
+
 	return c.NoContent(http.StatusNoContent)
 }
 
 func userPage(c echo.Context) error {
 	var id int64
 	var name, loginID string
+	// 파라미터가 넘어오지 않았을 때의 기본값
 	p := &model.Page{
 		PageType: "num", // id, num
 		Page:     1,
 		Num:      20,
 		ID:       0,
 	}
+	// 유저가 전달한 POST 값 바인드
 	if err := c.Bind(p); err != nil {
 		log.Error(err)
 		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgWorngParam)
 	}
-	db, err := storage.ConnectDB()
-	if err != nil {
-		log.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, model.ErrMsgDbConnection)
-	}
+
 	var rows *sql.Rows
+	var err error
 	var users []model.User
 	if p.PageType == "id" {
 		// id 가 0인 경우는 없으므로 최초 배열부터 가져옴
 		// 반드시 정렬 순서가 정해져 있어야 함
-		rows, err = storage.Select(db, "SELECT id, name, login_id FROM users WHERE id > ? ORDER BY id ASC LIMIT ?", p.ID, p.Num)
+		rows, err = storage.Select("SELECT id, name, login_id FROM users WHERE id > ? ORDER BY id ASC LIMIT ?", p.ID, p.Num)
 	} else {
-		rows, err = storage.Select(db, "SELECT id, name, login_id FROM users LIMIT ?, ?", (p.Page-1)*p.Num, p.Num)
+		rows, err = storage.Select("SELECT id, name, login_id FROM users LIMIT ?, ?", (p.Page-1)*p.Num, p.Num)
 	}
 	if err != nil {
 		log.Error(err)
@@ -226,16 +201,17 @@ func userPage(c echo.Context) error {
 			log.Debug("SELECT users Pagination By p.Page ", p.Page, " user : ", id, "_", name, "_", loginID)
 		}
 	}
-
 	defer rows.Close()
 
+	// 해당 항목의 전체 개수 및 페이지 수 가져오기
 	var pageInfo model.PageInfo
-	row := storage.SelectOne(db, "SELECT COUNT(*) totalCounts, CEIL(COUNT(*) / ?) totalPages FROM users", p.Num)
+	row := storage.SelectOne("SELECT COUNT(*) totalCounts, CEIL(COUNT(*) / ?) totalPages FROM users", p.Num)
 	err = row.Scan(&pageInfo.TotalCounts, &pageInfo.TotalPages)
 	if err != nil {
 		log.Error(err)
 		return echo.NewHTTPError(http.StatusNotFound, model.ErrMsgCannotFound)
 	}
+	// 페이지 정보와 결과배열을 객체에 담아서 JSON으로 리턴
 	var result model.PageResult
 	result.PageInfo = pageInfo
 	result.Result = users

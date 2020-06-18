@@ -22,10 +22,6 @@ CREATE TABLE `users` (
 
 func TestPagination(t *testing.T) {
 
-	db, err := storage.ConnectDB()
-	if err != nil {
-		log.Fatal(err)
-	}
 	var id int64
 	var name, login_id string
 
@@ -34,6 +30,7 @@ func TestPagination(t *testing.T) {
 	// var getCount int = 10
 	// var lastestId int64 = 0
 	// var pagingType string = "num"
+	var err error
 	var rows *sql.Rows
 	// 최초 호출이어서 받았던 pk값이 없거나, 여러 페이지를 한꺼번에 이동할 때는 lastestId 를 0 으로 보내야 함 (ex: 1 => 8 page)
 	var pageNum int = 1
@@ -45,9 +42,9 @@ func TestPagination(t *testing.T) {
 		if pagingType == "id" {
 			// id 가 0인 경우는 없으므로 최초 배열부터 가져옴
 			// 반드시 정렬 순서가 정해져 있어야 함
-			rows, err = storage.Select(db, "SELECT id, name, login_id FROM users WHERE id > ? ORDER BY id ASC LIMIT ?", lastestId, getCount)
+			rows, err = storage.Select("SELECT id, name, login_id FROM users WHERE id > ? ORDER BY id ASC LIMIT ?", lastestId, getCount)
 		} else {
-			rows, err = storage.Select(db, "SELECT id, name, login_id FROM users LIMIT ?, ?", (pageNum-1)*getCount, getCount)
+			rows, err = storage.Select("SELECT id, name, login_id FROM users LIMIT ?, ?", (pageNum-1)*getCount, getCount)
 		}
 		if err != nil {
 			log.Fatal(err)
