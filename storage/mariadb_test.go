@@ -22,6 +22,8 @@ CREATE TABLE `users` (
 
 func TestConnectDB(t *testing.T) {
 
+	storage.ConnectDB()
+
 	// Simple CRUD Test
 	res, err := storage.Execute("INSERT INTO users (name, login_id) VALUES(?,?)", "관리자", "gslee")
 	if err != nil {

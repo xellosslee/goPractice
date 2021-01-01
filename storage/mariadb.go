@@ -15,7 +15,7 @@ var DB *sql.DB
 func ConnectDB() {
 	var err error
 	// DB, err := sql.Open("mysql", "blackk:cndfactory@)20@tcp(192.168.110.75:3306)/cndf.order?timeout=30s&charset=utf8mb4")
-	DB, err = sql.Open("mysql", "root@tcp(localhost:3306)/shoppingmall?timeout=30s&charset=utf8mb4")
+	DB, err = sql.Open("mysql", "root@tcp(localhost:3306)/shoppingmall?timeout=30s&charset=utf8")
 	if err != nil {
 		log.Fatal(err)
 	}
