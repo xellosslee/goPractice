@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	"/storage/oracle"
+	"cndf.order.was/storage/oracle"
 )
 
 func TestOracleDB(t *testing.T) {
