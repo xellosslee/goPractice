@@ -1,11 +1,11 @@
-package storage
+package oracle
 
 import (
 	"database/sql"
 	"log"
 
-	// using mysql
-	_ "github.com/go-sql-driver/mysql"
+	// using oracle driver
+	_ "github.com/godror/godror"
 )
 
 // DB Connection Pool 적용된 글로벌 변수
@@ -14,8 +14,8 @@ var DB *sql.DB
 // ConnectDB 기본 DB 연결 시작
 func ConnectDB() {
 	var err error
-	// DB, err := sql.Open("mysql", "blackk:cndfactory@)20@tcp(192.168.110.75:3306)/cndf.order?timeout=30s&charset=utf8mb4")
-	DB, err = sql.Open("mysql", "root@tcp(localhost:3306)/shoppingmall?timeout=30s&charset=utf8")
+	// oracle 연결
+	DB, err = sql.Open("godror", "SPC_SHANY/cndfactory@10.244.10.121:1521/sdmsdb")
 	if err != nil {
 		log.Fatal(err)
 	}

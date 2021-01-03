@@ -7,7 +7,8 @@ import (
 	"strings"
 
 	"cndf.order.was/model"
-	"cndf.order.was/storage"
+	"cndf.order.was/storage/mysql"
+
 	"github.com/labstack/echo"
 	"github.com/op/go-logging"
 )
@@ -36,7 +37,7 @@ func userList(c echo.Context) error {
 	var id int64
 	var name, loginID string
 	var users []model.User
-	rows, err := storage.Select("SELECT id, name, login_id FROM users")
+	rows, err := mysql.Select("SELECT id, name, login_id FROM users")
 	if err != nil {
 		log.Error(err)
 		return echo.NewHTTPError(http.StatusBadRequest, strings.Replace(model.ErrMsgNotExists, "@", "유저", 1))
@@ -65,7 +66,7 @@ func userGetID(c echo.Context) error {
 	}
 	var id int64
 	var name, loginID string
-	row := storage.SelectOne("SELECT id, name, login_id FROM users WHERE id = ?", searchID)
+	row := mysql.SelectOne("SELECT id, name, login_id FROM users WHERE id = ?", searchID)
 	err = row.Scan(&id, &name, &loginID)
 	if err != nil {
 		log.Error(err)
@@ -86,7 +87,7 @@ func userGetLoginID(c echo.Context) error {
 	}
 	var id int64
 	var name, loginID string
-	row := storage.SelectOne("SELECT id, name, login_id FROM users WHERE login_id = ?", searchLoginID)
+	row := mysql.SelectOne("SELECT id, name, login_id FROM users WHERE login_id = ?", searchLoginID)
 	err = row.Scan(&id, &name, &loginID)
 	if err != nil {
 		log.Error(err)
@@ -103,7 +104,7 @@ func userPut(c echo.Context) error {
 	if err := c.Bind(u); err != nil {
 		return err
 	}
-	res, err := storage.Execute("INSERT INTO users (name, login_id) VALUES(?,?)", u.Name, u.LoginID)
+	res, err := mysql.Execute("INSERT INTO users (name, login_id) VALUES(?,?)", u.Name, u.LoginID)
 	if err != nil {
 		log.Error(err)
 		return echo.NewHTTPError(http.StatusNotAcceptable, strings.Replace(model.ErrMsgDuplicate, "@", "유저", 1))
@@ -136,7 +137,7 @@ func userDelete(c echo.Context) error {
 	log.Debug("called userDelete")
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	res, err := storage.Execute("DELETE FROM users WHERE id = ?", id)
+	res, err := mysql.Execute("DELETE FROM users WHERE id = ?", id)
 	if err != nil {
 		log.Error(err)
 		return echo.NewHTTPError(http.StatusBadRequest, strings.Replace(model.ErrMsgProcFail, "@", "삭제", 1))
@@ -176,9 +177,9 @@ func userPage(c echo.Context) error {
 	if p.PageType == "id" {
 		// id 가 0인 경우는 없으므로 최초 배열부터 가져옴
 		// 반드시 정렬 순서가 정해져 있어야 함
-		rows, err = storage.Select("SELECT id, name, login_id FROM users WHERE id > ? ORDER BY id ASC LIMIT ?", p.ID, p.Num)
+		rows, err = mysql.Select("SELECT id, name, login_id FROM users WHERE id > ? ORDER BY id ASC LIMIT ?", p.ID, p.Num)
 	} else {
-		rows, err = storage.Select("SELECT id, name, login_id FROM users LIMIT ?, ?", (p.Page-1)*p.Num, p.Num)
+		rows, err = mysql.Select("SELECT id, name, login_id FROM users LIMIT ?, ?", (p.Page-1)*p.Num, p.Num)
 	}
 	if err != nil {
 		log.Error(err)
@@ -205,7 +206,7 @@ func userPage(c echo.Context) error {
 
 	// 해당 항목의 전체 개수 및 페이지 수 가져오기
 	var pageInfo model.PageInfo
-	row := storage.SelectOne("SELECT COUNT(*) totalCounts, CEIL(COUNT(*) / ?) totalPages FROM users", p.Num)
+	row := mysql.SelectOne("SELECT COUNT(*) totalCounts, CEIL(COUNT(*) / ?) totalPages FROM users", p.Num)
 	err = row.Scan(&pageInfo.TotalCounts, &pageInfo.TotalPages)
 	if err != nil {
 		log.Error(err)
