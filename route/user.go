@@ -6,14 +6,14 @@ import (
 	"strconv"
 	"strings"
 
-	"cndf.order.was/model"
-	"cndf.order.was/storage/mysql"
+	"gs.lee.was/model"
+	"gs.lee.was/storage/mysql"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/op/go-logging"
 )
 
-var log = logging.MustGetLogger("cndf.order.was")
+var log = logging.MustGetLogger("gs.lee.was")
 
 // SetUserRouters Controller 역활
 func SetUserRouters(e *echo.Echo) {

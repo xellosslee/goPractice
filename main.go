@@ -1,93 +1,67 @@
-// 패키지명이 반드시 main인 파일만 실행파일로 생성 및 run 이 가능하다
+/*
+http 통신 방법중 echo를 테스트 하기 위한것으로
+사용하기 편하게 쪼개서 정리한다.
+1. 라우터 정리
+2. 실행 파일 정리
+3. 테스트 DB 출력 및 등록
+*/
 package main
 
-// 테스트
 import (
-	"net/http"
+	"fmt"
 	"os"
+	"runtime"
+	"strconv"
 
-	"cndf.order.was/route"
-	"cndf.order.was/storage/mysql"
+	"github.com/robfig/cron"
 
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
-	"github.com/op/go-logging"
+	echoSwagger "github.com/swaggo/echo-swagger"
+	"gs.lee.was/configs"
+	_ "gs.lee.was/docs"
+	"gs.lee.was/route"
 )
 
-var log = logging.MustGetLogger("cndf.order.was")
-var format = logging.MustStringFormatter(
-	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
-)
-
-// main 프로그램의 시작점
 func main() {
 
-	e := echo.New()
+	cnf := configs.GetConfig()
+	er := cnf.InitConfig(".env.json")
+	if er != nil {
+		fmt.Println("설정정보로드에러")
+		os.Exit(1)
+	}
 
-	initLogConfig(e)
+	if configs.GetConfigData().RunMode != "local" {
+		setSchedule()
+	}
 
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Cndfactory go web application server")
-	})
+	route.SetUserRouters(cnf.E)
 
-	route.SetUserRouters(e)
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	mysql.ConnectDB()
+	configData := configs.GetConfigData()
 
-	e.Logger.Fatal(e.Start(":80"))
+	cnf.E.GET("/swagger/*", echoSwagger.WrapHandler)
+	cnf.E.Static("/upload", "upload")
+
+	if configData.Ssluse == "Y" {
+		// 보안 접속을 위한 https 서버 실행
+		// "cert.pem"과 "privkey.pem" 파일이 필요함
+		cnf.E.Logger.Fatal(cnf.E.StartTLS(":"+strconv.Itoa(configData.HttpConfig.Port), configData.Sslcrt, configData.Sslkey))
+	} else {
+		// 일반적인 http 서버 실행
+		cnf.E.Logger.Fatal(cnf.E.Start(":" + strconv.Itoa(configData.HttpConfig.Port)))
+	}
+
+	defer cnf.CnfLog.Defung.Close()
+	defer cnf.CnfLog.InfoLog.Close()
+	defer cnf.CnfLog.FpLog.Close()
 }
 
-func initLogConfig(e *echo.Echo) {
-	debugLog, err := os.OpenFile("log/debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		panic(err)
-	}
-	defer debugLog.Close()
-
-	infoLog, err := os.OpenFile("log/info.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		panic(err)
-	}
-	defer infoLog.Close()
-
-	// backend1 에러 상황에서 화면에 표시되는 경우 출력
-	standardOutput := logging.NewLogBackend(os.Stderr, "", 0)
-	infoLogBackend := logging.NewLogBackend(infoLog, "", 0)
-	debugLogBackend := logging.NewLogBackend(debugLog, "", 0)
-
-	// For messages written to backend2 we want to add some additional
-	// information to the output, including the used log level and the name of
-	// the function.
-	standardFormatter := logging.NewBackendFormatter(standardOutput, format)
-	infoFormatter := logging.NewBackendFormatter(infoLogBackend, format)
-	debugLogFormatter := logging.NewBackendFormatter(debugLogBackend, format)
-
-	// Only errors and more severe messages should be sent to backend1
-	standardLog := logging.AddModuleLevel(standardFormatter)
-	standardLog.SetLevel(logging.ERROR, "")
-
-	infoLevel := logging.AddModuleLevel(infoFormatter)
-	infoLevel.SetLevel(logging.INFO, "")
-
-	// Set the backends to be used.
-	logging.SetBackend(standardLog, infoLevel, debugLogFormatter)
-
-	// log.Debugf("debug")
-	// log.Info("info")
-	// log.Notice("notice")
-	// log.Warning("warning")
-	// log.Error("err")
-	// log.Critical("crit")
-
-	// echo 미들웨어에서 사용될 access 로그파일 오픈
-	fpLog, err := os.OpenFile("log/access.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		panic(err)
-	}
-	defer fpLog.Close()
-
-	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-		Format: "[${time_rfc3339}] method=${method}, uri=${uri}, status=${status}\n",
-		Output: fpLog,
-	}))
+func setSchedule() {
+	c := cron.New()
+	// // 새벽 4시마다 수행
+	// c.AddFunc("0 0 4 * * *", func() {
+	// 	route.CheckStoreMagamStatus()
+	// })
+	c.Start()
 }

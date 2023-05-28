@@ -4,8 +4,8 @@ import (
 	"log"
 	"testing"
 
-	"cndf.order.was/model"
-	"cndf.order.was/storage/mysql"
+	"gs.lee.was/model"
+	"gs.lee.was/storage/mysql"
 )
 
 // 테스트에 사용된 테이블
