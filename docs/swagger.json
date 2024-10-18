@@ -5,7 +5,7 @@
         "contact": {},
         "version": "0.1"
     },
-    "host": "localhost:16002",
+    "host": "localhost:5001",
     "paths": {
         "/order/board": {
             "post": {

@@ -69,7 +69,7 @@ definitions:
       token:
         type: string
     type: object
-host: localhost:16002
+host: localhost:5001
 info:
   contact: {}
   title: Butler swagger api
