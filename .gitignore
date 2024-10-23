@@ -6,3 +6,4 @@ main.exe
 
 .env.json
 tmp
+go.sum

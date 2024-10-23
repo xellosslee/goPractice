@@ -1,118 +1,17 @@
-definitions:
-  model.OrderBoardReq:
-    properties:
-      storeCode:
-        type: string
-    type: object
-  model.OrderBoardRes:
-    properties:
-      countOrderList1:
-        type: integer
-      countOrderList2:
-        type: integer
-      countOrderList3:
-        type: integer
-      countOrderList4:
-        type: integer
-      orderList1:
-        items:
-          additionalProperties: true
-          type: object
-        type: array
-      orderList2:
-        items:
-          additionalProperties: true
-          type: object
-        type: array
-      orderList3:
-        items:
-          additionalProperties: true
-          type: object
-        type: array
-      orderList4:
-        items:
-          additionalProperties: true
-          type: object
-        type: array
-      titleOrderList1:
-        type: string
-      titleOrderList2:
-        type: string
-      titleOrderList3:
-        type: string
-      titleOrderList4:
-        type: string
-    type: object
-  model.UserLoginReq:
-    properties:
-      id:
-        type: string
-      otp:
-        type: string
-      pass:
-        type: string
-    required:
-    - id
-    - otp
-    - pass
-    type: object
-  model.UserLoginRes:
-    properties:
-      id:
-        type: string
-      initPass:
-        type: string
-      name:
-        type: string
-      phone:
-        type: string
-      token:
-        type: string
-    type: object
-host: localhost:5001
 info:
   contact: {}
-  title: Butler swagger api
-  version: "0.1"
 paths:
-  /order/board:
-    post:
+  /user:
+    get:
       consumes:
       - application/json
-      description: 해피버틀러 물류센터 비치용 WEB 주문현황 화면 출력에 필요한 데이터를 조회합니다.
-      parameters:
-      - description: Order board list
-        in: body
-        name: userLoginReq
-        required: true
-        schema:
-          $ref: '#/definitions/model.OrderBoardReq'
+      description: 유저 목록을 가져온다.
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.OrderBoardRes'
-      summary: 주문현황판 주문내역 조회
-  /user/login:
-    post:
-      consumes:
-      - application/json
-      description: User login
-      parameters:
-      - description: Login request info
-        in: body
-        name: userLoginReq
-        required: true
-        schema:
-          $ref: '#/definitions/model.UserLoginReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.UserLoginRes'
-      summary: User login
+            type: json
+      summary: 유저를 가져온다.
 swagger: "2.0"

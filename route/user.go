@@ -31,6 +31,12 @@ func SetUserRouters(e *echo.Echo) {
 	e.DELETE("/user/:id", userDelete)
 }
 
+// @Summary 유저를 가져온다.
+// @Description 유저 목록을 가져온다.
+// @Accept json
+// @Produce json
+// @Success 200 json []model.User
+// @Router /user [get]
 func userList(c echo.Context) error {
 	log.Debug("called userList")
 
