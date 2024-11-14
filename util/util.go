@@ -57,10 +57,10 @@ func GenerateRandomId(prefix string, appendMillisecond int) string {
 	if appendMillisecond > 0 {
 		now = now.Add(time.Millisecond * time.Duration(appendMillisecond))
 	}
-	// configs.GetConfigLog().Info(time.Now().UnixNano())
+	// configs.Log.Info(time.Now().UnixNano())
 	i := now.UnixNano() / int64(time.Millisecond) / int64(time.Nanosecond)
-	// configs.GetConfigLog().Info(i)
+	// configs.Log.Info(i)
 	r := rand.Intn(100)
-	// configs.GetConfigLog().Info(fmt.Sprintf("P%09d%02d", i, r))
+	// configs.Log.Info(fmt.Sprintf("P%09d%02d", i, r))
 	return fmt.Sprintf("%s%s%02d", prefix, strconv.Itoa(int(i))[5:], r)
 }

@@ -3,12 +3,13 @@ package util
 import (
 	"bytes"
 	"errors"
+	"net/smtp"
+	"text/template"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"net/smtp"
-	"text/template"
 
 	"gopkg.in/gomail.v2"
 	"gs.lee.was/configs"
@@ -42,25 +43,25 @@ func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 
 func SendEmail(receiver string, title string, bodyFile string, message interface{}, attachments []string) error {
 	// // Sender data.
-	// from := configs.GetConfigData().EmailInfo.Address
-	// password := configs.GetConfigData().EmailInfo.Password
+	// from := configs.ServerConfig.EmailInfo.Address
+	// password := configs.ServerConfig.EmailInfo.Password
 
 	// // smtp server configuration.
-	// smtpHost := configs.GetConfigData().EmailInfo.Host
-	// smtpPort := configs.GetConfigData().EmailInfo.Port
+	// smtpHost := configs.ServerConfig.EmailInfo.Host
+	// smtpPort := configs.ServerConfig.EmailInfo.Port
 
 	// if attachments == nil {
 	// 	attachments = make(map[string][]byte)
 	// }
 	// conn, err := net.Dial("tcp", smtpHost+":"+strconv.Itoa(smtpPort))
 	// if err != nil {
-	// 	configs.GetConfigLog().Error(err)
+	// 	configs.Log.Error(err)
 	// 	return err
 	// }
 
 	// c, err := smtp.NewClient(conn, smtpHost)
 	// if err != nil {
-	// 	configs.GetConfigLog().Error(err)
+	// 	configs.Log.Error(err)
 	// 	return err
 	// }
 
@@ -69,20 +70,20 @@ func SendEmail(receiver string, title string, bodyFile string, message interface
 	// }
 
 	// if err = c.StartTLS(tlsconfig); err != nil {
-	// 	configs.GetConfigLog().Error(err)
+	// 	configs.Log.Error(err)
 	// 	return err
 	// }
 
 	// auth := LoginAuth(from, password)
 
 	// if err = c.Auth(auth); err != nil {
-	// 	configs.GetConfigLog().Error(err)
+	// 	configs.Log.Error(err)
 	// 	return err
 	// }
 
 	t, err := template.ParseFiles("static/" + bodyFile)
 	if err != nil {
-		configs.GetConfigLog().Error(err)
+		configs.Log.Error(err)
 		return err
 	}
 	body := bytes.NewBuffer(nil)
@@ -115,19 +116,19 @@ func SendEmail(receiver string, title string, bodyFile string, message interface
 
 	// err = smtp.SendMail(smtpHost+":"+strconv.Itoa(smtpPort), auth, from, receiver, body.Bytes())
 	// if err != nil {
-	// 	configs.GetConfigLog().Error(err)
+	// 	configs.Log.Error(err)
 	// 	return err
 	// }
 
-	//d := gomail.NewDialer(configs.GetConfigData().EmailInfo.Host, configs.GetConfigData().EmailInfo.Port, configs.GetConfigData().EmailInfo.Address, configs.GetConfigData().EmailInfo.Password)
+	//d := gomail.NewDialer(configs.ServerConfig.EmailInfo.Host, configs.ServerConfig.EmailInfo.Port, configs.ServerConfig.EmailInfo.Address, configs.ServerConfig.EmailInfo.Password)
 	//d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 
 	m := gomail.NewMessage()
-	m.SetHeader("From", configs.GetConfigData().EmailInfo.Address)
+	m.SetHeader("From", configs.ServerConfig.EmailInfo.Address)
 	m.SetHeader("To", receiver)
 	m.SetHeader("Subject", title)
 	m.SetBody("text/html", body.String())
-	println(configs.GetConfigData().EmailInfo.Address)
+	println(configs.ServerConfig.EmailInfo.Address)
 	for _, v := range attachments {
 		m.Attach(v)
 	}
@@ -141,8 +142,8 @@ func SendEmail(receiver string, title string, bodyFile string, message interface
 		Data: emailRaw.Bytes(),
 	}
 
-	configs.GetConfigLog().Debug("aws Id ::  " + configs.GetConfigData().EmailInfo.Id)
-	configs.GetConfigLog().Debug("aws Pw ::  " + configs.GetConfigData().EmailInfo.Password)
+	configs.Log.Debug("aws Id ::  " + configs.ServerConfig.EmailInfo.Id)
+	configs.Log.Debug("aws Pw ::  " + configs.ServerConfig.EmailInfo.Password)
 
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Profile: "default",
@@ -160,13 +161,13 @@ func SendEmail(receiver string, title string, bodyFile string, message interface
 	_, err = sesClient.SendRawEmail(&ses.SendRawEmailInput{
 		RawMessage:   &msg,
 		Destinations: toAddresses,
-		Source:       aws.String(configs.GetConfigData().EmailInfo.Address),
+		Source:       aws.String(configs.ServerConfig.EmailInfo.Address),
 	})
 
 	return err
 
 	//if err := d.DialAndSend(m); err != nil {
-	//	configs.GetConfigLog().Debug(err)
+	//	configs.Log.Debug(err)
 	//	return err
 	//}
 

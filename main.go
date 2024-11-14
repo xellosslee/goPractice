@@ -23,38 +23,37 @@ import (
 
 func main() {
 
-	cnf := configs.GetConfig()
-	er := cnf.InitConfig(".env.json")
+	er := configs.ServerConfig.InitConfig(".env.json")
 	if er != nil {
 		fmt.Println("설정정보로드에러")
 		os.Exit(1)
 	}
 
-	if configs.GetConfigData().RunMode != "local" {
+	if configs.ServerConfig.RunMode != "local" {
 		setSchedule()
 	}
 
-	route.SetUserRouters(cnf.E)
+	route.SetUserRouters(configs.Echo)
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	configData := configs.GetConfigData()
+	configData := configs.ServerConfig
 
-	cnf.E.GET("/swagger/*", echoSwagger.WrapHandler)
-	cnf.E.Static("/upload", "upload")
+	configs.Echo.GET("/swagger/*", echoSwagger.WrapHandler)
+	configs.Echo.Static("/upload", "upload")
 
 	if configData.Ssluse == "Y" {
 		// 보안 접속을 위한 https 서버 실행
 		// "cert.pem"과 "privkey.pem" 파일이 필요함
-		cnf.E.Logger.Fatal(cnf.E.StartTLS(":"+strconv.Itoa(configData.HttpConfig.Port), configData.Sslcrt, configData.Sslkey))
+		configs.Echo.Logger.Fatal(configs.Echo.StartTLS(":"+strconv.Itoa(configData.HttpConfig.Port), configData.Sslcrt, configData.Sslkey))
 	} else {
 		// 일반적인 http 서버 실행
-		cnf.E.Logger.Fatal(cnf.E.Start(":" + strconv.Itoa(configData.HttpConfig.Port)))
+		configs.Echo.Logger.Fatal(configs.Echo.Start(":" + strconv.Itoa(configData.HttpConfig.Port)))
 	}
 
-	defer cnf.CnfLog.Defung.Close()
-	defer cnf.CnfLog.InfoLog.Close()
-	defer cnf.CnfLog.FpLog.Close()
+	defer configs.ServerConfig.LogFileAccess.Close()
+	defer configs.ServerConfig.LogFileInfo.Close()
+	defer configs.ServerConfig.LogFileDebug.Close()
 }
 
 func setSchedule() {
