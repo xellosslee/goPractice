@@ -34,6 +34,7 @@ func main() {
 	}
 
 	route.SetUserRouters(configs.Echo)
+	route.SetWaitRoute(configs.Echo)
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 

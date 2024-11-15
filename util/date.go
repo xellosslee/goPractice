@@ -1,7 +1,7 @@
 package util
 
 import (
-"time"
+	"time"
 )
 
 type TimeDif struct {
@@ -13,13 +13,11 @@ type TimeDif struct {
 	Years   int
 }
 
-
 func CurrDate() string {
 	t := time.Now()
 	returnVal := t.Format("20060102")
 	return returnVal
 }
-
 
 func CurrDateTime() string {
 	t := time.Now()
@@ -32,7 +30,6 @@ func CurrDateTimeFmt() string {
 	returnVal := t.Format("2006-01-02 15:04:05")
 	return returnVal
 }
-
 
 func (self *TimeDif) adjust(daysInMonth int) {
 	if self.Seconds > 59 {
